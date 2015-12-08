@@ -94,8 +94,10 @@ def prefix_search_from_list(file):
     try:
         results = []
         f = open(file, "r").read()
-        prefixes = f.replace('[','').replace(']','').replace("\'",'').replace("\"",'').split()
+        prefixes = f.replace('[','').replace(']','').replace("\'",'').replace("\"",'').replace(",",'').split()
+        print("{0} prefixes contained in file.".format(len(prefixes)))
         for prefix in prefixes:
+            print("Trying prefix {0}".format(prefix))
             results.extend(youtube_search(prefix))
 
         detailedResults = [get_video_details(x) for x in results]
@@ -103,4 +105,4 @@ def prefix_search_from_list(file):
     except IOError as e:
         print("error({0}): {1}".format(e.errno, e.strerror))
 
-prefix_search_from_list("prefix.txt")
+prefix_search_from_list("prefix2.txt")
