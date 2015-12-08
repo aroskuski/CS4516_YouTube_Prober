@@ -68,6 +68,5 @@ def prefix_search(length, amount):
 def get_video_details(video_id):
 	global youtube
 	video_details = youtube.videos().list(part="id,snippet,contentDetails,status,statistics",id=video_id).execute()
-	#TODO: Process details into desired format
 	return video_details
 
