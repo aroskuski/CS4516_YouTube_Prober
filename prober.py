@@ -59,10 +59,14 @@ def prefix_search(length, amount):
 	results = []
 	for i in prefix_generator(length, amount):
 		results.append(youtube_search(i))
+	detailedResults = [get_video_details(x) for x in results]	
+	outfile = open('res.txt')
+	outfile.write(json.dump(detailedResults))
+	outfile.close()
 
 def get_video_details(video_id):
 	global youtube
-	video_details = youtube.videos.list(part="id,snippet",id=video_id).exectute()
+	video_details = youtube.videos.list(part="id,snippet,contentDetails,status,statistics",id=video_id).exectute()
 	#TODO: Process details into desired format
 	return video_details
 
