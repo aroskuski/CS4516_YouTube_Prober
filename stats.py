@@ -1,3 +1,4 @@
+# -*- coding:UTF-8 -*-
 import argparse
 import json
 import string
@@ -11,6 +12,7 @@ class Statistics:
         self.results_files = results_files
         self.read_all_input()
         self.groups = self.make_video_groups(10)
+        self.million_group = self.make_million_group(self.groups[9])
 
     def read_all_input(self):
         '''
@@ -39,7 +41,26 @@ class Statistics:
             
         return groups
 
+    def make_cat_histogram_per_group(self):
+        histograms = []
+        for group in self.groups:
+            histograms.append(group.make_category_histogram())
+        return histograms
 
+    def make_tag_histogram_per_group(self, numTags=0):
+        histograms = []
+        for group in self.groups:
+            histograms.append(group.make_tag_histogram(numTags))
+        return histograms
+
+    def make_million_group(self, video_group):
+        million_group = Video_Group(None)
+
+        for i in video_group.videos:
+            if (video_group.get_video_views(i) >= 1000000):
+                million_group.add_videos([i])
+        return million_group
+    
 class Video_Group:
 
     def __init__(self, videos):
@@ -57,7 +78,7 @@ class Video_Group:
 
     def add_videos(self, videos):
         self.videos.extend(videos)
-        self.sorted_viewcount()\
+        self.sorted_viewcount()
 
 
     def sorted_viewcount(self):
@@ -67,7 +88,7 @@ class Video_Group:
         if self.videos == None:
             return
         self.videos.sort(key=lambda x: self.get_video_views(x))
-
+    
     def make_tag_histogram(self, num=0):
         '''
         Returns a frequency histogram list of tags within the group
@@ -140,7 +161,7 @@ class Video_Group:
 
     def average_group_views(self):
         '''
-        Get the average number of videos in this group
+        Get the average number of views in this group
         '''
         count = 0
         for video in self.videos:
@@ -148,6 +169,16 @@ class Video_Group:
         avg = count / self.__len__()
         return avg
 
+    def median_group_views(self):
+        '''
+        Get the median number of views in this group
+        '''
+        medianIndex = len(self.videos) / 2
+        median = int(medianIndex)
+        if ((medianIndex % 2) == 1):
+            median = int((int(math.floor(medianIndex)) + int(math.ciel(medianIndex))) / 2)
+        return self.get_video_views(self.videos[median])
+        
     def average_group_video_length(self):
         '''
         Gets the average length of the video
@@ -222,3 +253,23 @@ if __name__ == '__main__':
                         help="Results files to generate statistics from")
     args = parser.parse_args()
     stats = Statistics(args.input)
+    histograms = stats.make_cat_histogram_per_group()
+    j = 0
+    for hist in histograms:
+        print("Group #{0} Category Histogram".format(j))
+        for i in hist:
+            print(i)
+        print()
+        j += 1
+    tHists = stats.make_tag_histogram_per_group(10)
+    j = 0
+    for tHist in tHists:
+        print("Group #{0} Tag Histogram".format(j))
+        for i in tHist:
+            print(i)
+        print()
+        j += 1
+    millions = stats.million_group
+    histogram = millions.make_tag_histogram()
+    for hist in histogram:
+        print(hist)
