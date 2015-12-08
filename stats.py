@@ -4,6 +4,7 @@ import string
 import re
 import math
 
+
 class Statistics:
 
     def __init__(self, results_files):
@@ -36,7 +37,7 @@ class Statistics:
         for i in range(0, length, group_size):
             new_group = Video_Group(self.videos[i: i + group_size])
             groups.append(new_group)
-            
+
         return groups
 
 
@@ -148,6 +149,14 @@ class Video_Group:
         avg = count / self.__len__()
         return avg
 
+    def average_like_ratio(self):
+        count = 0.0
+        for video in self.videos:
+            count += self.get_video_like_pct(video)
+        avg = count / self.__len__()
+        return avg
+
+
     def average_group_video_length(self):
         '''
         Gets the average length of the video
@@ -214,6 +223,25 @@ class Video_Group:
         Get the number of views that a video has
         '''
         return int(video['items'][0]['statistics']['viewCount'])
+
+    def get_video_like_pct(self, video):
+        likes, dislikes = 0, 0
+        if 'likeCount' in video['items'][0]['statistics']:
+            likes = int(video['items'][0]['statistics']['likeCount'])
+
+        if 'dislikeCount' in video['items'][0]['statistics']:
+            dislikes = int(video['items'][0]['statistics']['dislikeCount'])
+
+        total = likes + dislikes
+        if total == 0:
+            # video has same number of likes and dislikes, even though it's 0
+            # of each
+            return 0.50
+
+        if dislikes == 0:
+            return 1.0
+
+        return float(likes) / total
 
 
 if __name__ == '__main__':
