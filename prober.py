@@ -9,7 +9,7 @@ import urllib
 import string
 import random
 
-DEVELOPER_KEY = "AIzaSyDbZ8GyKj2-xoGZeBA9_EZcz-lxWEtOQYM"
+DEVELOPER_KEY = "REPLACE_ME"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
