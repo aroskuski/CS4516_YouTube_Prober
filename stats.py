@@ -67,6 +67,13 @@ class Video_Group:
         histogram = sorted(histogram.items(), key=lambda x: x[1])
         return histogram
 
+    def average_group_views(self):
+        count = 0
+        for video in self.videos:
+            count += self.get_video_views(video)
+        avg = count / self.__len__()
+        return avg
+
     def get_video_tags(self, video):
         try:
             return video['items'][0]['snippet']['tags']
