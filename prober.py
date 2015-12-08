@@ -9,7 +9,7 @@ import urllib
 import string
 import random
 
-DEVELOPER_KEY = "REPLACE_ME"
+DEVELOPER_KEY = "AIzaSyDbZ8GyKj2-xoGZeBA9_EZcz-lxWEtOQYM"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
@@ -69,12 +69,16 @@ def youtube_search(prefix):
 def prefix_search(length, amount):
 	results = []
 	for i in prefix_generator(length, amount):
-		results.append(youtube_search(i))
-	return results
+		results += youtube_search(i)
+	print(results)
+	detailedResults = [get_video_details(x) for x in results]	
+	outfile = open('res.txt','w')
+	outfile.write(json.dumps(detailedResults))
+	outfile.close()
+
 
 def get_video_details(video_id):
 	global youtube
-	video_details = youtube.videos.list(part="id,snippet",id=video_id).exectute()
-	#TODO: Process details into desired format
+	video_details = youtube.videos().list(part="id,snippet,contentDetails,status,statistics",id=video_id).execute()
 	return video_details
 
