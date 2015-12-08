@@ -11,6 +11,9 @@ class Statistics:
         self.groups = self.make_video_groups(10)
 
     def read_all_input(self):
+        '''
+        Reads all files provided as input and parses the videos
+        '''
         for file in self.results_files:
             with open(file, 'r') as f:
                 contents = f.read()
@@ -21,6 +24,9 @@ class Statistics:
         return
 
     def make_video_groups(self, group_count):
+        '''
+        Splits the videos into 'group_count' groups of equal size`
+        '''
         groups = []
         length = len(self.videos)
         group_size = int(length / group_count)
@@ -48,14 +54,21 @@ class Video_Group:
 
     def add_videos(self, videos):
         self.videos.extend(videos)
-        self.sorted_viewcount()
+        self.sorted_viewcount()\
+
 
     def sorted_viewcount(self):
+        '''
+        Sorts the list of videos by ascending view count
+        '''
         if self.videos == None:
             return
         self.videos.sort(key=lambda x: self.get_video_views(x))
 
-    def make_tag_histogram(self):
+    def make_tag_histogram(self, num=0):
+        '''
+        Returns a frequency histogram list of tags within the group
+        '''
         histogram = {}
         for video in self.videos:
             tags = self.get_video_tags(video)
@@ -65,22 +78,93 @@ class Video_Group:
                 else:
                     histogram[tag] += 1
         histogram = sorted(histogram.items(), key=lambda x: x[1])
+
+        if num == None or num == 0:
+            return histogram
+        else:
+            return histogram[-1 * num:]
+
+    def make_category_histogram(self):
+        '''
+        Returns a frequency histogram list of categories within the group
+        '''
+        categories = {
+            1: "Film & Animation",
+            2: "Autos & Vehicles",
+            10: "Music",
+            15: "Pets & Animals",
+            17: "Sports",
+            18: "Short Movies",
+            19: "Travel & Events",
+            20: "Gaming",
+            21: "Videoblogging",
+            22: "People & Blogs",
+            23: "Comedy",
+            24: "Entertainment",
+            25: "News & Politics",
+            26: "Howto & Style",
+            27: "Education",
+            28: "Science & Technology",
+            29: "Nonprofits & Activism",
+            30: "Movies",
+            31: "Anime/Animation",
+            32: "Action/Adventure",
+            33: "Classics",
+            34: "Comedy",
+            35: "Documentary",
+            36: "Drama",
+            37: "Family",
+            38: "Foreign",
+            39: "Horror",
+            40: "Sci-Fi/Fantasy",
+            41: "Thriller",
+            42: "Shorts",
+            43: "Shows",
+            44: "Trailers"
+        }
+        histogram = {}
+        for video in self.videos:
+            try:
+                category = categories[self.get_video_category_id(video)]
+            except KeyError as e:
+                category = "Other (Unknown)"
+            if category not in histogram:
+                histogram[category] = 1
+            else:
+                histogram[category] += 1
+        histogram = sorted(histogram.items(), key=lambda x: x[1])
         return histogram
 
     def average_group_views(self):
+        '''
+        Get the average number of videos in this group
+        '''
         count = 0
         for video in self.videos:
             count += self.get_video_views(video)
         avg = count / self.__len__()
         return avg
 
+    def get_video_category_id(self, video):
+        '''
+        Gets the video category (the id, not the actual name of the category)
+        '''
+        categoryId = int(video['items'][0]['snippet']['categoryId'])
+        return categoryId
+
     def get_video_tags(self, video):
+        '''
+        Get the tags associated with a video
+        '''
         try:
             return video['items'][0]['snippet']['tags']
         except KeyError as e:
             return []
 
     def get_video_views(self, video):
+        '''
+        Get the number of views that a video has
+        '''
         return int(video['items'][0]['statistics']['viewCount'])
 
 
