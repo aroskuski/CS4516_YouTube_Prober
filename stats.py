@@ -157,6 +157,19 @@ class Video_Group:
         avg = count / self.__len__()
         return avg
 
+    def average_group_video_quality(self):
+        '''
+        Gets the average length of the video
+        '''
+        count = 0
+        for video in self.videos:
+            if self.get_video_quality(video) == 'sd':
+                count += 1
+        stat = float(count) / self.__len__()
+        return stat
+
+
+
     def iso8601_duration_to_seconds(self, duration):
         '''
         Converts an ISO 8601 formatted duration to seconds
@@ -213,6 +226,12 @@ class Video_Group:
         Get the number of views that a video has
         '''
         return int(video['items'][0]['statistics']['viewCount'])
+
+    def get_video_quality(self, video):
+        '''
+        Gets the best available quality of video
+        '''
+        return video['items'][0]['contentDetails']['definition']
 
 
 if __name__ == '__main__':
