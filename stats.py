@@ -2,7 +2,7 @@ import argparse
 import json
 import string
 import re
-
+import math
 
 class Statistics:
 
@@ -31,11 +31,12 @@ class Statistics:
         '''
         groups = []
         length = len(self.videos)
-        group_size = int(length / group_count)
+        group_size = int(math.ceil(float(length / group_count)))
 
         for i in range(0, length, group_size):
             new_group = Video_Group(self.videos[i: i + group_size])
             groups.append(new_group)
+            
         return groups
 
 
