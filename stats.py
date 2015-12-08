@@ -1,5 +1,7 @@
 import argparse
 import json
+import string
+import re
 
 
 class Statistics:
@@ -145,6 +147,44 @@ class Video_Group:
         avg = count / self.__len__()
         return avg
 
+    def average_group_video_length(self):
+        '''
+        Gets the average length of the video
+        '''
+        count = 0
+        for video in self.videos:
+            count += self.get_video_length(video)
+        avg = count / self.__len__()
+        return avg
+
+    def iso8601_duration_to_seconds(self, duration):
+        '''
+        Converts an ISO 8601 formatted duration to seconds
+        '''
+        # http://stackoverflow.com/questions/16742381/how-to-convert-youtube-api-duration-to-seconds
+        ISO_8601_period_rx = re.compile(
+            'P'
+            '(?:T'  # time part must begin with a T
+            '(?:(?P<hours>\d+)H)?'   # hourss
+            '(?:(?P<minutes>\d+)M)?'  # minutes
+            '(?:(?P<seconds>\d+)S)?'  # seconds
+            ')?'   # end of time part
+        )
+        int_hours, int_minutes, int_seconds = 0, 0, 0
+        t_dict = ISO_8601_period_rx.match(duration).groupdict()
+        if 'hours' in t_dict:
+            if t_dict['hours'] != None:
+                int_hours = int(t_dict['hours']) * 3600
+        if 'minutes' in t_dict:
+            if t_dict['minutes'] != None:
+                int_minutes = int(t_dict['minutes']) * 60
+        if 'seconds' in t_dict:
+            if t_dict['seconds'] != None:
+                int_seconds = int(t_dict['seconds'])
+
+        result = int_hours + int_minutes + int_seconds
+        return result
+
     def get_video_category_id(self, video):
         '''
         Gets the video category (the id, not the actual name of the category)
@@ -160,6 +200,13 @@ class Video_Group:
             return video['items'][0]['snippet']['tags']
         except KeyError as e:
             return []
+
+    def get_video_length(self, video):
+        '''
+        Gets the length of the video in seconds
+        '''
+        duration = video['items'][0]['contentDetails']['duration']
+        return self.iso8601_duration_to_seconds(duration)
 
     def get_video_views(self, video):
         '''
