@@ -74,8 +74,12 @@ def prefix_search(length, amount):
         results += youtube_search(i)
     print(results)
     detailedResults = [get_video_details(x) for x in results]
+    write_json(detailedResults)
+
+
+def write_json(results):
     outfile = open('res.txt', 'w')
-    outfile.write(json.dumps(detailedResults))
+    outfile.write(json.dumps(results))
     outfile.close()
 
 
@@ -84,3 +88,19 @@ def get_video_details(video_id):
     video_details = youtube.videos().list(
         part="id,snippet,contentDetails,status,statistics", id=video_id).execute()
     return video_details
+
+
+def prefix_search_from_list(file):
+    try:
+        results = []
+        f = open(file, "r").read()
+        prefixes = f.replace('[','').replace(']','').replace("\"",'').split()
+        for prefix in prefixes:
+            results.extend(youtube_search(prefix))
+
+        detailedResults = [get_video_details(x) for x in results]
+        write_json(detailedResults)
+    except IOError as e:
+        print("error({0}): {1}".format(e.errno, e.strerror))
+
+prefix_search_from_list("prefix.json")
