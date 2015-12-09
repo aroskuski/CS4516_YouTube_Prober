@@ -170,6 +170,30 @@ class Video_Group:
         histogram = sorted(histogram.items(), key=lambda x: x[1])
         return histogram
 
+    def make_weekday_histogram(self):
+        histogram = {}
+        # For whatever reason, Monday is 0
+        weekdays = {
+            0: "Monday",
+            1: "Tuesday",
+            2: "Wednesday",
+            3: "Thursday",
+            4: "Friday",
+            5: "Saturday",
+            6: "Sunday",
+        }
+        for video in self.videos:
+            try:
+                weekday = weekdays[self.get_video_upload_weekday(video)]
+            except KeyError as e:
+                weekday = "Other (Unknown)"
+            if weekday not in histogram:
+                histogram[weekday] = 1
+            else:
+                histogram[weekday] += 1
+        histogram = sorted(histogram.items(), key=lambda x: x[1])
+        return histogram
+
     def average_group_views(self):
         '''
         Get the average number of videos in this group
@@ -207,8 +231,6 @@ class Video_Group:
                 count += 1
         stat = float(count) / self.__len__()
         return stat
-
-
 
     def iso8601_duration_to_seconds(self, duration):
         '''
@@ -267,13 +289,21 @@ class Video_Group:
         '''
         return int(video['items'][0]['statistics']['viewCount'])
 
-    def get_video_upload_month(self, video):
-        full_up_date = video['items'][0]['snippet']['publishedAt']
-        date = full_up_date.split("T")[0]
+    def get_video_upload_date(self, video):
+        full_upl_date = video['items'][0]['snippet']['publishedAt']
+        date = full_upl_date.split("T")[0]
 
         # 2015-09-22T04:57:45.000Z
         parsed = datetime.datetime.strptime(date, "%Y-%m-%d")
-        return parsed.month
+        return parsed
+
+    def get_video_upload_month(self, video):
+        date = self.get_video_upload_date(video)
+        return date.month
+
+    def get_video_upload_weekday(self, video):
+        date = self.get_video_upload_date(video)
+        return date.weekday()
 
     def get_video_quality(self, video):
         '''
