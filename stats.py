@@ -52,6 +52,12 @@ class Statistics:
             histograms.append(group.make_category_histogram())
         return histograms
 
+    def make_year_per_group(self):
+        histograms = []
+        for group in self.groups:
+            histograms.append(group.make_year_histogram())
+        return histograms
+
     def make_tag_histogram_per_group(self, numTags=0):
         histograms = []
         for group in self.groups:
@@ -211,6 +217,17 @@ class Video_Group:
                 histogram[month] = 1
             else:
                 histogram[month] += 1
+        histogram = sorted(histogram.items(), key=lambda x: x[1])
+        return histogram
+
+    def make_year_histogram(self):
+        histogram = {}
+        for video in self.videos:
+            year = self.get_video_upload_year(video)
+            if year not in histogram:
+                histogram[year] = 1
+            else:
+                histogram[year] += 1
         histogram = sorted(histogram.items(), key=lambda x: x[1])
         return histogram
 
@@ -418,6 +435,10 @@ class Video_Group:
         parsed = datetime.datetime.strptime(date, "%Y-%m-%d")
         return parsed
 
+    def get_video_upload_year(self, video):
+        date = self.get_video_upload_date(video)
+        return date.year
+
     def get_video_upload_month(self, video):
         date = self.get_video_upload_date(video)
         return date.month
@@ -544,3 +565,11 @@ if __name__ == '__main__':
     for group in stats.groups:
         numVidsWithTags = group.num_videos_w_tags()
         print("Videos with tags = %d" % numVidsWithTags)
+    tHists = stats.make_year_per_group()
+    j = 0
+    for tHist in tHists:
+        print("Group #{0} Year upload Histogram".format(j))
+        for i in tHist:
+            print(i)
+        print()
+        j += 1
