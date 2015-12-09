@@ -232,6 +232,17 @@ class Video_Group:
         stat = float(count) / self.__len__()
         return stat
 
+    def average_licensed_pct(self):
+        '''
+        Gets the average length of the video
+        '''
+        count = 0
+        for video in self.videos:
+            if self.get_licensed_content(video) == True:
+                count += 1
+        stat = float(count) / self.__len__()
+        return stat
+
     def iso8601_duration_to_seconds(self, duration):
         '''
         Converts an ISO 8601 formatted duration to seconds
@@ -310,6 +321,12 @@ class Video_Group:
         Gets the best available quality of video
         '''
         return video['items'][0]['contentDetails']['definition']
+
+    def get_licensed_content(self, video):
+        '''
+        Gets whether or not the video contains licensed content
+        '''
+        return video['items'][0]['contentDetails']['licensedContent']
 
     def get_video_like_pct(self, video):
         likes, dislikes = 0, 0
