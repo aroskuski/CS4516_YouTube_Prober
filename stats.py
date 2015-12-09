@@ -4,7 +4,7 @@ import json
 import string
 import re
 import math
-
+import sys
 
 class Statistics:
 
@@ -179,7 +179,7 @@ class Video_Group:
         if ((medianIndex % 2) == 1):
             median = int((int(math.floor(medianIndex)) + int(math.ciel(medianIndex))) / 2)
         return self.get_video_views(self.videos[median])
-        
+
     def average_like_ratio(self):
         count = 0.0
         for video in self.videos:
@@ -187,6 +187,20 @@ class Video_Group:
         avg = count / self.__len__()
         return avg
 
+    def average_view_favorite_ratio(self):
+        count = 0.0
+        for video in self.videos:
+            count += self.get_video_favorite_view_ratio(video)
+        avg = count / self.__len__()
+        return avg
+
+    def average_view_comment_ratio(self):
+        count = 0.0
+        for video in self.videos:
+            count += self.get_video_comment_view_ratio(video)
+        avg = count / self.__len__()
+        return avg
+    
     def average_group_video_length(self):
         '''
         Gets the average length of the video
@@ -197,6 +211,39 @@ class Video_Group:
         avg = count / self.__len__()
         return avg
 
+    def max_group_video_length(self):
+        maxLength = 0
+
+        for video in self.videos:
+            if (self.get_video_length(video) > maxLength):
+                maxLength = self.get_video_length(video)
+
+        return maxLength
+
+    def min_group_video_length(self):
+        minLength = int(sys.maxsize)
+
+        for video in self.videos:
+            if (self.get_video_length(video) < minLength):
+                minLength = self.get_video_length(video)
+
+        return minLength
+
+    def average_num_tags(self):
+        total = 0
+        for video in self.videos:
+            total += len(self.get_video_tags(video))
+        average = total / self.__len__()
+        return average
+
+    def num_videos_w_tags(self):
+        count = 0
+        for video in self.videos:
+            if (len(self.get_video_tags(video)) > 0):
+                count += 1
+
+        return count
+        
     def iso8601_duration_to_seconds(self, duration):
         '''
         Converts an ISO 8601 formatted duration to seconds
@@ -225,6 +272,14 @@ class Video_Group:
         result = int_hours + int_minutes + int_seconds
         return result
 
+    def readable_seconds(self, seconds):
+        sToHours = int(math.floor(seconds / 3600))
+        leftover = seconds % 3600
+        sToMinutes = int(math.floor(leftover / 60))
+        sec = leftover % 60
+        time = {'hours': sToHours, 'minutes': sToMinutes, 'seconds':sec}
+        return time
+    
     def get_video_category_id(self, video):
         '''
         Gets the video category (the id, not the actual name of the category)
@@ -273,7 +328,40 @@ class Video_Group:
 
         return float(likes) / total
 
+    def get_video_favorite_view_ratio(self, video):
+        views, favorites = 0, 0
+        views = self.get_video_views(video)
 
+        if 'favoriteCount' in video['items'][0]['statistics']:
+            favorites = int(video['items'][0]['statistics']['favoriteCount'])  
+
+        total = views + favorites
+        if total == 0:
+            # video has same number of likes and favorites
+            return 0.50
+
+        if favorites == 0:
+            return 1.0
+
+        return float(views) / total
+
+    def get_video_comment_view_ratio(self, video):
+        views, comments = 0, 0
+        views = self.get_video_views(video)
+
+        if 'commentCount' in video['items'][0]['statistics']:
+            comments = int(video['items'][0]['statistics']['commentCount'])  
+
+        total = views + comments
+        if total == 0:
+            # video has same number of likes and favorites
+            return 0.50
+
+        if comments == 0:
+            return 1.0
+
+        return float(views) / total
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", nargs="+",
@@ -297,6 +385,27 @@ if __name__ == '__main__':
         print()
         j += 1
     millions = stats.million_group
-    histogram = millions.make_tag_histogram()
-    for hist in histogram:
-        print(hist)
+    j = 0
+    for group in stats.groups:
+        print("Group {0} View/Favorite Ratio".format(j))
+        print(group.average_view_favorite_ratio())
+        j += 1
+    j = 0
+    for group in stats.groups:
+        readTime = group.readable_seconds(group.max_group_video_length())
+        print("Max video length = %d hours, %d minutes, %d seconds" % (readTime['hours'], readTime['minutes'], readTime['seconds']))
+        
+    j = 0
+    for group in stats.groups:
+        readTime = group.readable_seconds(group.min_group_video_length())
+        print("Min video length = %d hours, %d minutes, %d seconds" % (readTime['hours'], readTime['minutes'], readTime['seconds']))
+
+    j = 0
+    for group in stats.groups:
+        averageTags = group.average_num_tags()
+        print("Average tags = %d" % averageTags)
+
+    j = 0
+    for group in stats.groups:
+        numVidsWithTags = group.num_videos_w_tags()
+        print("Videos with tags = %d" % numVidsWithTags)
