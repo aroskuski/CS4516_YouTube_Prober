@@ -3,6 +3,7 @@ import json
 import string
 import re
 import math
+import datetime
 
 
 class Statistics:
@@ -32,12 +33,14 @@ class Statistics:
         '''
         groups = []
         length = len(self.videos)
-        group_size = int(math.ceil(float(length / group_count)))
+
+        group_size = length / group_count
+        remainder = int(math.ceil(float((length % group_size)) / group_count))
+        group_size += remainder
 
         for i in range(0, length, group_size):
             new_group = Video_Group(self.videos[i: i + group_size])
             groups.append(new_group)
-
         return groups
 
 
@@ -139,6 +142,34 @@ class Video_Group:
         histogram = sorted(histogram.items(), key=lambda x: x[1])
         return histogram
 
+    def make_month_histogram(self):
+        histogram = {}
+        months = {
+            1: "January",
+            2: "February",
+            3: "March",
+            4: "April",
+            5: "May",
+            6: "June",
+            7: "July",
+            8: "August",
+            9: "September",
+            10: "October",
+            11: "November",
+            12: "December"
+        }
+        for video in self.videos:
+            try:
+                month = months[self.get_video_upload_month(video)]
+            except KeyError as e:
+                month = "Other (Unknown)"
+            if month not in histogram:
+                histogram[month] = 1
+            else:
+                histogram[month] += 1
+        histogram = sorted(histogram.items(), key=lambda x: x[1])
+        return histogram
+
     def average_group_views(self):
         '''
         Get the average number of videos in this group
@@ -155,7 +186,6 @@ class Video_Group:
             count += self.get_video_like_pct(video)
         avg = count / self.__len__()
         return avg
-
 
     def average_group_video_length(self):
         '''
@@ -223,6 +253,14 @@ class Video_Group:
         Get the number of views that a video has
         '''
         return int(video['items'][0]['statistics']['viewCount'])
+
+    def get_video_upload_month(self, video):
+        full_up_date = video['items'][0]['snippet']['publishedAt']
+        date = full_up_date.split("T")[0]
+
+        # 2015-09-22T04:57:45.000Z
+        parsed = datetime.datetime.strptime(date, "%Y-%m-%d")
+        return parsed.month
 
     def get_video_like_pct(self, video):
         likes, dislikes = 0, 0
