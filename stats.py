@@ -7,6 +7,7 @@ import math
 import sys
 import datetime
 
+
 class Statistics:
 
     def __init__(self, results_files):
@@ -57,6 +58,12 @@ class Statistics:
             histograms.append(group.make_tag_histogram(numTags))
         return histograms
 
+    def make_cat_view_histogram_per_group(self, numTags=0):
+        histograms = []
+        for group in self.groups:
+            histograms.append(group.make_category_view_histogram())
+        return histograms
+
     def make_million_group(self, video_group):
         million_group = Video_Group(None)
 
@@ -64,7 +71,8 @@ class Statistics:
             if (video_group.get_video_views(i) >= 1000000):
                 million_group.add_videos([i])
         return million_group
-    
+
+
 class Video_Group:
 
     def __init__(self, videos):
@@ -74,49 +82,7 @@ class Video_Group:
             self.videos = videos
         self.sorted_viewcount()
 
-    def __len__(self):
-        return len(self.videos)
-
-    def __getitem__(self, index):
-        return self.videos[index]
-
-    def add_videos(self, videos):
-        self.videos.extend(videos)
-        self.sorted_viewcount()
-
-
-    def sorted_viewcount(self):
-        '''
-        Sorts the list of videos by ascending view count
-        '''
-        if self.videos == None:
-            return
-        self.videos.sort(key=lambda x: self.get_video_views(x))
-    
-    def make_tag_histogram(self, num=0):
-        '''
-        Returns a frequency histogram list of tags within the group
-        '''
-        histogram = {}
-        for video in self.videos:
-            tags = self.get_video_tags(video)
-            for tag in tags:
-                if tag not in histogram:
-                    histogram[tag] = 1
-                else:
-                    histogram[tag] += 1
-        histogram = sorted(histogram.items(), key=lambda x: x[1])
-
-        if num == None or num == 0:
-            return histogram
-        else:
-            return histogram[-1 * num:]
-
-    def make_category_histogram(self):
-        '''
-        Returns a frequency histogram list of categories within the group
-        '''
-        categories = {
+        self.categories = {
             1: "Film & Animation",
             2: "Autos & Vehicles",
             10: "Music",
@@ -150,16 +116,73 @@ class Video_Group:
             43: "Shows",
             44: "Trailers"
         }
+
+    def __len__(self):
+        return len(self.videos)
+
+    def __getitem__(self, index):
+        return self.videos[index]
+
+    def add_videos(self, videos):
+        self.videos.extend(videos)
+        self.sorted_viewcount()
+
+    def sorted_viewcount(self):
+        '''
+        Sorts the list of videos by ascending view count
+        '''
+        if self.videos == None:
+            return
+        self.videos.sort(key=lambda x: self.get_video_views(x))
+
+    def make_tag_histogram(self, num=0):
+        '''
+        Returns a frequency histogram list of tags within the group
+        '''
+        histogram = {}
+        for video in self.videos:
+            tags = self.get_video_tags(video)
+            for tag in tags:
+                if tag not in histogram:
+                    histogram[tag] = 1
+                else:
+                    histogram[tag] += 1
+        histogram = sorted(histogram.items(), key=lambda x: x[1])
+
+        if num == None or num == 0:
+            return histogram
+        else:
+            return histogram[-1 * num:]
+
+    def make_category_histogram(self):
+        '''
+        Returns a frequency histogram list of categories within the group
+        '''
         histogram = {}
         for video in self.videos:
             try:
-                category = categories[self.get_video_category_id(video)]
+                category = self.categories[self.get_video_category_id(video)]
             except KeyError as e:
                 category = "Other (Unknown)"
             if category not in histogram:
                 histogram[category] = 1
             else:
                 histogram[category] += 1
+        histogram = sorted(histogram.items(), key=lambda x: x[1])
+        return histogram
+
+    def make_category_view_histogram(self):
+        histogram = {}
+        for video in self.videos:
+            try:
+                category = self.categories[self.get_video_category_id(video)]
+                views = self.get_video_views(video)
+            except KeyError as e:
+                category = "Other (Unknown)"
+            if category not in histogram:
+                histogram[category] = views
+            else:
+                histogram[category] += views
         histogram = sorted(histogram.items(), key=lambda x: x[1])
         return histogram
 
@@ -232,7 +255,8 @@ class Video_Group:
         medianIndex = len(self.videos) / 2
         median = int(medianIndex)
         if ((medianIndex % 2) == 1):
-            median = int((int(math.floor(medianIndex)) + int(math.ciel(medianIndex))) / 2)
+            median = int((int(math.floor(medianIndex)) +
+                          int(math.ciel(medianIndex))) / 2)
         return self.get_video_views(self.videos[median])
 
     def average_like_ratio(self):
@@ -298,7 +322,7 @@ class Video_Group:
                 count += 1
 
         return count
-        
+
     def average_group_video_quality(self):
         '''
         Gets the average length of the video
@@ -354,9 +378,9 @@ class Video_Group:
         leftover = seconds % 3600
         sToMinutes = int(math.floor(leftover / 60))
         sec = leftover % 60
-        time = {'hours': sToHours, 'minutes': sToMinutes, 'seconds':sec}
+        time = {'hours': sToHours, 'minutes': sToMinutes, 'seconds': sec}
         return time
-    
+
     def get_video_category_id(self, video):
         '''
         Gets the video category (the id, not the actual name of the category)
@@ -438,7 +462,7 @@ class Video_Group:
         views = self.get_video_views(video)
 
         if 'favoriteCount' in video['items'][0]['statistics']:
-            favorites = int(video['items'][0]['statistics']['favoriteCount'])  
+            favorites = int(video['items'][0]['statistics']['favoriteCount'])
 
         total = views + favorites
         if total == 0:
@@ -455,7 +479,7 @@ class Video_Group:
         views = self.get_video_views(video)
 
         if 'commentCount' in video['items'][0]['statistics']:
-            comments = int(video['items'][0]['statistics']['commentCount'])  
+            comments = int(video['items'][0]['statistics']['commentCount'])
 
         total = views + comments
         if total == 0:
@@ -473,6 +497,10 @@ if __name__ == '__main__':
                         help="Results files to generate statistics from")
     args = parser.parse_args()
     stats = Statistics(args.input)
+
+    print("Total Views per Category Histogram")
+    print(stats.videos.make_category_view_histogram())
+
     histograms = stats.make_cat_histogram_per_group()
     j = 0
     for hist in histograms:
@@ -498,12 +526,14 @@ if __name__ == '__main__':
     j = 0
     for group in stats.groups:
         readTime = group.readable_seconds(group.max_group_video_length())
-        print("Max video length = %d hours, %d minutes, %d seconds" % (readTime['hours'], readTime['minutes'], readTime['seconds']))
-        
+        print("Max video length = %d hours, %d minutes, %d seconds" %
+              (readTime['hours'], readTime['minutes'], readTime['seconds']))
+
     j = 0
     for group in stats.groups:
         readTime = group.readable_seconds(group.min_group_video_length())
-        print("Min video length = %d hours, %d minutes, %d seconds" % (readTime['hours'], readTime['minutes'], readTime['seconds']))
+        print("Min video length = %d hours, %d minutes, %d seconds" %
+              (readTime['hours'], readTime['minutes'], readTime['seconds']))
 
     j = 0
     for group in stats.groups:
